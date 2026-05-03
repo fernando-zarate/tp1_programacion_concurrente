@@ -49,14 +49,14 @@ public class Scheduler implements Runnable {
                 break;
             }
                 // Agregar job a la cola, sincronizado para evitar que se sobrescriban datos
-                synchronized (jobQueue) {
-                    jobQueue.add(job);
-                }
-                try {
-                    Thread.sleep(100); // Aca depsues ponemos el tiempo que tarda
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            synchronized (jobQueue) {
+                jobQueue.add(job);
+            }
+            try {
+                Thread.sleep(100); // Aca depsues ponemos el tiempo que tarda
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             
         }
     }
