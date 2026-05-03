@@ -6,22 +6,16 @@ public class WorkerExecution implements Runnable {
 
     ArrayList<Job> jobsExecution;
     ArrayList<Job> jobsFailed;
-    ArrayList<Job> JobsFinalized;
+    ArrayList<Job> jobsFinalized;
     Node[] nodes;
 
     Random random;
     
-    public WorkerExecution(ArrayList<Job> JobsFinalized, ArrayList<Job> JobsExcecution, ArrayList<Job> JobsFailed, Node[] nodes) {
+    public WorkerExecution(ArrayList<Job> jobsFinalized, ArrayList<Job> jobsExecution, ArrayList<Job> jobsFailed, Node[] nodes) {
         
- 
-        this.jobsExecution = new ArrayList<>();
-        this.jobsFailed = new ArrayList<>();
-        this.JobsFinalized = new ArrayList<>();
-        this.nodes = new Node[200];
-
-        this.JobsFinalized = JobsFinalized;
-        this.jobsExecution = JobsExcecution;
-        this.jobsFailed = JobsFailed;
+        this.jobsFinalized = jobsFinalized;
+        this.jobsExecution = jobsExecution;
+        this.jobsFailed = jobsFailed;
         this.nodes = nodes;
         random = new Random();
     }
@@ -33,7 +27,21 @@ public class WorkerExecution implements Runnable {
         while(true)
         {
 
-            if(JobsFinalized.size() == 0)
+            
+            // tomamos un job aleatorio de los Jobs en ejecucion
+            Job job_taken = null;
+            synchronized(jobsExecution)
+            {
+                if(!jobsExecution.isEmpty())
+                {
+                    int i_random_job = Politic.randomIndex(jobsExecution.size());
+                    job_taken = jobsExecution.remove(i_random_job);
+                }
+                int i_random_job = Politic.randomIndex(jobsExecution.size());
+                job_taken = jobsExecution.remove(i_random_job);
+            }
+           
+            if(job_taken == null)
             {
                 try{
                     Thread.sleep(100);
@@ -44,50 +52,14 @@ public class WorkerExecution implements Runnable {
                 }
                 continue;
             }
-            
-            // tomamos un job aleatorio de los Jobs en cola
-            Job job_taken = null;
-            synchronized(JobsFinalized)
-            {
-                int i_random_job = Politic.randomIndex(JobsFinalized.size());
-                job_taken = JobsFinalized.remove(i_random_job);
-            }
 
             if(Politic.executionSuccess())
             {
-
-                // vamos a recorrer el arreglo buscando un nodo ocupado
-                synchronized(nodes)
-                {
-                    for(int i=0; i<nodes.length; i++)
-                    {
-                        if( nodes[i].getStatus().equals("Busy"))
-                        {
-                            nodes[i].setStatus("Free");
-                            nodes[i].incrementJobsCounter();
-                            JobsFinalized.add(job_taken);
-                            break;
-                        }
-                    }
-                }
-
+            synchronized(jobsFinalized)
+            {
+                jobsFinalized.add(job_taken);
             }
-            else
-            {   
-                synchronized(nodes)
-                {
-                    for(int i=0; i<nodes.length; i++)
-                    {
-                        if( nodes[i].getStatus().equals("Busy"))
-                        {
-                            nodes[i].setStatus("Out of Service");
-                            nodes[i].incrementJobsCounter();
-                            jobsFailed.add(job_taken);
-                            break;
-                        }
-                    }
-                }
-            }
+
             try{
                 Thread.sleep(100); 
             }
@@ -95,6 +67,29 @@ public class WorkerExecution implements Runnable {
             {
                 e.printStackTrace();
             }
+
+            break;
+
+            }
+
+            else
+            {   
+                synchronized(jobsFailed)
+                    {
+                        jobsFailed.add(job_taken);
+                    }
+                try
+                {
+                    Thread.sleep(100); 
+                }
+                catch(InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            break;
+            }
+
+            
         }    
     }
 }
