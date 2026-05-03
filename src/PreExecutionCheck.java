@@ -34,41 +34,65 @@ public class PreExecutionCheck implements Runnable {
 
             if(JobsQueue.size() == 0)
             {
+                try{
+                    Thread.sleep(100);
+                }
+                catch(InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
                 continue;
             }
             
             // tomamos un job aleatorio de los Jobs en cola
-            int i_random_job = Politic.randomIndex(JobsQueue.size());
-            Job job_taken = JobsQueue.remove(i_random_job);
+            Job job_taken = null;
+            synchronized(JobsQueue)
+            {
+                int i_random_job = Politic.randomIndex(JobsQueue.size());
+                job_taken = JobsQueue.remove(i_random_job);
+            }
 
-            if(Politic.executionSuccess())
+            if(Politic.isValidJob())
             {
 
                 // vamos a recorrer el arreglo buscando un nodo ocupado
-                for(int i=0; i<nodes.length; i++)
+                synchronized(nodes)
                 {
-                    if( nodes[i].getStatus().equals("Busy"))
+                    for(int i=0; i<nodes.length; i++)
                     {
-                        nodes[i].setStatus("Free");
-                        nodes[i].incrementJobsCounter();
-                        jobsExecution.add(job_taken);
-                        break;
+                        if( nodes[i].getStatus().equals("Busy"))
+                        {
+                            nodes[i].setStatus("Free");
+                            nodes[i].incrementJobsCounter();
+                            jobsExecution.add(job_taken);
+                            break;
+                        }
                     }
                 }
 
             }
             else
-            {
-                for(int i=0; i<nodes.length; i++)
+            {   
+                synchronized(nodes)
                 {
-                    if( nodes[i].getStatus().equals("Busy"))
+                    for(int i=0; i<nodes.length; i++)
                     {
-                        nodes[i].setStatus("Out of Service");
-                        nodes[i].incrementJobsCounter();
-                        jobsFailed.add(job_taken);
-                        break;
+                        if( nodes[i].getStatus().equals("Busy"))
+                        {
+                            nodes[i].setStatus("Out of Service");
+                            nodes[i].incrementJobsCounter();
+                            jobsFailed.add(job_taken);
+                            break;
+                        }
                     }
                 }
+            }
+            try{
+                Thread.sleep(100); 
+            }
+            catch(InterruptedException e)
+            {
+                e.printStackTrace();
             }
         }    
     }
