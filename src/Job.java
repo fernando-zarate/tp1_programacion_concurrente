@@ -2,14 +2,13 @@ package src;
 
 public class Job {
 
-    // Attributes
     Integer id;
-    Integer stage; // 0: Not started, 1: Scheduler, 2: PreExecutionCheck, 3: WorkerExecution, 4: PostProcessingAuditor.
-    Boolean isWorking; // True if the job is being processed by a thread, false otherwise.
+    Integer stage;     // 0: sin empezar, 1: Scheduler, 2: PreCheck, 3: Worker, 4: Auditor
+    Boolean isWorking;
 
     public Job(Integer id) {
-        this.id = id;
-        this.stage = 0;
+        this.id        = id;
+        this.stage     = 0;
         this.isWorking = false;
     }
 }

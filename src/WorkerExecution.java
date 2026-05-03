@@ -1,91 +1,57 @@
 package src;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class WorkerExecution implements Runnable {
 
-    ArrayList<Job> jobsExecution;
-    ArrayList<Job> jobsFailed;
-    ArrayList<Job> jobsFinalized;
+    private final ArrayList<Job> jobsExecution;
+    private final ArrayList<Job> jobsFinished;
+    private final ArrayList<Job> jobsFailed;
 
-    Random random;
-    
-    public WorkerExecution(ArrayList<Job> jobsFinalized, ArrayList<Job> jobsExecution, ArrayList<Job> jobsFailed) {
-        
-        this.jobsFinalized = jobsFinalized;
-        this.jobsExecution = jobsExecution;
-        this.jobsFailed = jobsFailed;
-        random = new Random();
+    // FIX: El orden de parámetros estaba invertido en el original.
+    // Ahora coincide exactamente con cómo Main los pasa:
+    // new WorkerExecution(jobsInExecution, jobsFinished, jobsFailed)
+    public WorkerExecution(ArrayList<Job> jobsExecution, ArrayList<Job> jobsFinished, ArrayList<Job> jobsFailed) {
+        this.jobsExecution  = jobsExecution;
+        this.jobsFinished   = jobsFinished;
+        this.jobsFailed     = jobsFailed;
     }
 
     @Override
     public void run() {
 
+        while (true) {
 
-        while(true)
-        {
-
-            
-            // tomamos un job aleatorio de los Jobs en ejecucion
-            Job job_taken = null;
-            synchronized(jobsExecution)
-            {
-                if(!jobsExecution.isEmpty())
-                {
-                    int i_random_job = Politic.randomIndex(jobsExecution.size());
-                    job_taken = jobsExecution.remove(i_random_job);
+            Job job = null;
+            synchronized (jobsExecution) {
+                if (!jobsExecution.isEmpty()) {
+                    int idx = Politic.randomIndex(jobsExecution.size());
+                    job = jobsExecution.remove(idx);
                 }
             }
-           
-            if(job_taken == null)
-            {
-                try{
-                    Thread.sleep(1);
+
+            if (job == null) {
+                // FIX: Condición de parada: si la etapa anterior (PreExecutionCheck)
+                // ya terminó y no quedan jobs en ejecución, este hilo puede salir.
+                if (!Main.getAreStagesRunning()) {
+                    break;
                 }
-                catch(InterruptedException e)
-                {
-                    e.printStackTrace();
-                }
+                try { Thread.sleep(5); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
                 continue;
             }
 
-            if(Politic.executionSuccess())
-            {
-            synchronized(jobsFinalized)
-            {
-                jobsFinalized.add(job_taken);
-            }
+            // Simula tiempo de ejecución (Etapa 3)
+            try { Thread.sleep(Politic.WORKER_DELAY_MS); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
 
-            try{
-                Thread.sleep(1); 
-            }
-            catch(InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-
-            break;
-
-            }
-
-            else
-            {   
-                synchronized(jobsFailed)
-                    {
-                        jobsFailed.add(job_taken);
-                    }
-                try
-                {
-                    Thread.sleep(1); 
+            if (Politic.executionSuccess()) {
+                job.stage = 3;
+                synchronized (jobsFinished) {
+                    jobsFinished.add(job);
                 }
-                catch(InterruptedException e)
-                {
-                    e.printStackTrace();
+            } else {
+                synchronized (jobsFailed) {
+                    jobsFailed.add(job);
                 }
-            break;
             }
-
-            
-        }    
+        }
     }
 }
