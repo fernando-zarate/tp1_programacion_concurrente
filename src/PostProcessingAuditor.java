@@ -48,7 +48,7 @@ public class PostProcessingAuditor implements Runnable {
                 try  {
                     Thread.sleep(20);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    e.printStackTrace();
                 }
             }
         }
