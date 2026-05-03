@@ -4,24 +4,20 @@ import java.util.Random;
 
 public class PreExecutionCheck implements Runnable {
 
-    ArrayList<Job> JobsQueue;
+    ArrayList<Job> jobsQueue;
     ArrayList<Job> jobsExecution;
     ArrayList<Job> jobsFailed;
     Node[] nodes;
 
     Random random;
     
-    public PreExecutionCheck(ArrayList<Job> JobsQueue, ArrayList<Job> JobsExcecution, ArrayList<Job> JobsFailed, Node[] nodes) {
+    public PreExecutionCheck(ArrayList<Job> jobsQueue, ArrayList<Job> jobsExecution, ArrayList<Job> jobsFailed, Node[] nodes) {
         
-        this.JobsQueue = new ArrayList<>();
-        this.jobsExecution = new ArrayList<>();
-        this.jobsFailed = new ArrayList<>();
-        this.nodes = new Node[200];
-
-        this.JobsQueue = JobsQueue;
-        this.jobsExecution = JobsExcecution;
-        this.jobsFailed = JobsFailed;
+        this.jobsQueue = jobsQueue;
+        this.jobsExecution = jobsExecution;
+        this.jobsFailed = jobsFailed;
         this.nodes = nodes;
+
         random = new Random();
     }
 
@@ -31,8 +27,20 @@ public class PreExecutionCheck implements Runnable {
 
         while(true)
         {
+            
+            // tomamos un job aleatorio de los Jobs en cola
+            Job job_taken = null;
+            synchronized(jobsQueue)
+            {
+                if(!jobsQueue.isEmpty())
+                {
+                    int i_random_job = Politic.randomIndex(jobsQueue.size());
+                    job_taken = jobsQueue.remove(i_random_job);
+                }
+                
+            }
 
-            if(JobsQueue.size() == 0)
+            if(job_taken == null)
             {
                 try{
                     Thread.sleep(100);
@@ -42,14 +50,6 @@ public class PreExecutionCheck implements Runnable {
                     e.printStackTrace();
                 }
                 continue;
-            }
-            
-            // tomamos un job aleatorio de los Jobs en cola
-            Job job_taken = null;
-            synchronized(JobsQueue)
-            {
-                int i_random_job = Politic.randomIndex(JobsQueue.size());
-                job_taken = JobsQueue.remove(i_random_job);
             }
 
             if(Politic.isValidJob())
@@ -63,8 +63,11 @@ public class PreExecutionCheck implements Runnable {
                         if( nodes[i].getStatus().equals("Busy"))
                         {
                             nodes[i].setStatus("Free");
-                            nodes[i].incrementJobsCounter();
-                            jobsExecution.add(job_taken);
+                            //nodes[i].incrementJobsCounter();
+                            synchronized(jobsExecution)
+                            {
+                                jobsExecution.add(job_taken);
+                            }
                             break;
                         }
                     }
@@ -80,8 +83,11 @@ public class PreExecutionCheck implements Runnable {
                         if( nodes[i].getStatus().equals("Busy"))
                         {
                             nodes[i].setStatus("Out of Service");
-                            nodes[i].incrementJobsCounter();
-                            jobsFailed.add(job_taken);
+                            //nodes[i].incrementJobsCounter();
+                            synchronized(jobsFailed)
+                            {
+                                jobsFailed.add(job_taken);
+                            }
                             break;
                         }
                     }
