@@ -7,16 +7,14 @@ public class WorkerExecution implements Runnable {
     ArrayList<Job> jobsExecution;
     ArrayList<Job> jobsFailed;
     ArrayList<Job> jobsFinalized;
-    Node[] nodes;
 
     Random random;
     
-    public WorkerExecution(ArrayList<Job> jobsFinalized, ArrayList<Job> jobsExecution, ArrayList<Job> jobsFailed, Node[] nodes) {
+    public WorkerExecution(ArrayList<Job> jobsFinalized, ArrayList<Job> jobsExecution, ArrayList<Job> jobsFailed) {
         
         this.jobsFinalized = jobsFinalized;
         this.jobsExecution = jobsExecution;
         this.jobsFailed = jobsFailed;
-        this.nodes = nodes;
         random = new Random();
     }
 
@@ -37,14 +35,12 @@ public class WorkerExecution implements Runnable {
                     int i_random_job = Politic.randomIndex(jobsExecution.size());
                     job_taken = jobsExecution.remove(i_random_job);
                 }
-                int i_random_job = Politic.randomIndex(jobsExecution.size());
-                job_taken = jobsExecution.remove(i_random_job);
             }
            
             if(job_taken == null)
             {
                 try{
-                    Thread.sleep(100);
+                    Thread.sleep(1);
                 }
                 catch(InterruptedException e)
                 {
@@ -61,7 +57,7 @@ public class WorkerExecution implements Runnable {
             }
 
             try{
-                Thread.sleep(100); 
+                Thread.sleep(1); 
             }
             catch(InterruptedException e)
             {
@@ -80,7 +76,7 @@ public class WorkerExecution implements Runnable {
                     }
                 try
                 {
-                    Thread.sleep(100); 
+                    Thread.sleep(1); 
                 }
                 catch(InterruptedException e)
                 {

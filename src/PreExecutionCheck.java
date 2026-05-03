@@ -32,14 +32,26 @@ public class PreExecutionCheck implements Runnable {
         while(true)
         {
 
-            if(JobsQueue.size() == 0)
+            Job job_taken = null;
+            synchronized (JobsQueue)
             {
+                if (!JobsQueue.isEmpty())
+                {
+                    // tomamos un job aleatorio de los Jobs en cola
+                    int i_random_job = Politic.randomIndex(JobsQueue.size());
+                    job_taken = JobsQueue.remove(i_random_job);
+                }
+            }
+
+            if (job_taken == null)
+            {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 continue;
             }
-            
-            // tomamos un job aleatorio de los Jobs en cola
-            int i_random_job = Politic.randomIndex(JobsQueue.size());
-            Job job_taken = JobsQueue.remove(i_random_job);
 
             if(Politic.executionSuccess())
             {

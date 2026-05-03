@@ -29,7 +29,7 @@ public class Main {
         ArrayList<Job> jobsValidated = new ArrayList<>();
         ArrayList<Job> jobsFailed = new ArrayList<>();
         // Logger thread.
-        Thread logger = new Thread(new Logger(nodes, jobsContainer, jobsInQueue, jobsInExecution, jobsFinished, jobsValidated, jobsFailed));
+        Thread logger = new Thread(new Logger(jobsFailed, jobsValidated));
         // Stage threads arrays.
         Thread[] schedulers = new Thread[SCHEDULER_QUANTITY]; // Stage 1: Scheduler.
         Thread[] preExecutionChecks = new Thread[PRE_EXECUTION_CHECK_QUANTITY]; // Stage 2: PreExecutionCheck.
@@ -48,19 +48,19 @@ public class Main {
         }
         // Initialize Scheduler threads array.
         for (int i = 0; i < SCHEDULER_QUANTITY; i++) {
-            schedulers[i] = new Thread(new Scheduler(nodes, jobsContainer, jobsInQueue));
+            schedulers[i] = new Thread(new Scheduler(jobsContainer, jobsInQueue, nodes));
         }
         // Initialize PreExecutionCheck threads array.
         for (int i = 0; i < PRE_EXECUTION_CHECK_QUANTITY; i++) {
-            preExecutionChecks[i] = new Thread(new PreExecutionCheck(nodes, jobsInQueue, jobsInExecution, jobsFailed));
+            preExecutionChecks[i] = new Thread(new PreExecutionCheck(jobsInQueue, jobsInExecution, jobsFailed, nodes));
         }
         // Initialize WorkerExecution threads array.
         for (int i = 0; i < WORKER_EXECUTION_QUANTITY; i++) {
-            workerExecutions[i] = new Thread(new WorkerExecution(nodes, jobsInExecution, jobsFinished, jobsFailed));
+            workerExecutions[i] = new Thread(new WorkerExecution(jobsInExecution, jobsFinished, jobsFailed));
         }
         // Initialize PostProcessingAuditor threads array.
         for (int i = 0; i < POST_PROCESSING_AUDITOR_QUANTITY; i++) {
-            postProcessingAuditors[i] = new Thread(new PostProcessingAuditor(nodes, jobsFinished, jobsValidated, jobsFailed));
+            postProcessingAuditors[i] = new Thread(new PostProcessingAuditor(jobsFinished, jobsValidated, jobsFailed));
         }
 
         // START OF ALL STAGES AND LOGGER:

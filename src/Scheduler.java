@@ -32,7 +32,7 @@ public class Scheduler implements Runnable {
                 // Buscar un nodo libre, setear como busy y pasar a stage=1
                 boolean assigned = false;
                 while (!assigned) {
-                    int randomIndex = random.nextInt(nodes.length);
+                    int randomIndex = Politic.randomIndex(nodes.length);
                     Node node = nodes[randomIndex];
 
                     synchronized (node) {
@@ -53,7 +53,7 @@ public class Scheduler implements Runnable {
                 jobQueue.add(job);
             }
             try {
-                Thread.sleep(100); // Aca depsues ponemos el tiempo que tarda
+                Thread.sleep(1); // Aca depsues ponemos el tiempo que tarda
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
