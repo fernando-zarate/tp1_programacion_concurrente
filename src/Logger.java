@@ -32,8 +32,14 @@ public class Logger implements Runnable {
             BufferedWriter writer = new BufferedWriter(file);
 
             while (running) {
-                int failed = failedJobs.size();
-                int verified = verifiedJobs.size();
+                int failed;
+                int verified;
+                synchronized (failedJobs){
+                    failed = failedJobs.size();
+                }
+                synchronized (verifiedJobs){
+                    verified = verifiedJobs.size();
+                }
                 long time = System.currentTimeMillis() - initialTime;
 
                 String line = "Time: " + time + " | Failed Jobs: " + failed + " | Verified Jobs: " + verified;
@@ -54,4 +60,3 @@ public class Logger implements Runnable {
         }
     }
 }
-
