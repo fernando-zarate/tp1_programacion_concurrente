@@ -17,7 +17,6 @@ public class Scheduler implements Runnable {
 
     @Override
     public void run() {
-        Random random = new Random();
         while (true) {
             Job job = null;
             synchronized (jobContainer) {

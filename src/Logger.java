@@ -22,11 +22,11 @@ public class Logger implements Runnable {
         this.initialTime = System.currentTimeMillis();
         BufferedWriter writer = null;
         try {
-            writer = new BufferedWriter(new FileWriter("log.txt", true));
+            writer = new BufferedWriter(new FileWriter("log.txt", true)); // cambiar a true si queremos sobrescribir el archivo en cada ejecución
             long time;
             int failed;
             int verified;
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted()) { // Corre hasta que el Main interrumpa el hilo
                 synchronized (failedJobs) {
                     failed = failedJobs.size();
                 }
@@ -38,19 +38,19 @@ public class Logger implements Runnable {
                 System.out.println(line);
                 writer.write(line);
                 writer.newLine();
-                Thread.sleep(200);
+                Thread.sleep(200); // Registra cada 200ms
             }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            // graceful stop: fall through to finally to write summary
+            Thread.currentThread().interrupt(); // Restaura el flag de interrupción para salida limpia
         } finally {
+            // Al finalizar, escribe el resumen total
             this.finalTime = System.currentTimeMillis() - initialTime;
             try {
                 String summary = "Total Time: " + finalTime + " | Total Failed Jobs: " + failedJobs.size() + " | Total Verified Jobs: " + verifiedJobs.size();
                 if (writer == null) {
-                    writer = new BufferedWriter(new FileWriter("log.txt", true));
+                    writer = new BufferedWriter(new FileWriter("log.txt", false));
                 }
                 System.out.println(summary);
                 writer.write(summary);
