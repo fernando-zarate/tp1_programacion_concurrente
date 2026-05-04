@@ -17,6 +17,7 @@ public class Scheduler implements Runnable {
 
     @Override
     public void run() {
+        //Random random = new Random();
         while (true) {
             Job job = null;
             synchronized (jobContainer) {
@@ -37,6 +38,7 @@ public class Scheduler implements Runnable {
                             node.setStatus("Busy");
                             node.incrementJobsCounter();
                             job.stage = 1;
+                            job.setAssignedNodeId(randomIndex);
                             assigned = true;
                         }
                     }
