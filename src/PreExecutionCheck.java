@@ -49,9 +49,8 @@ public class PreExecutionCheck implements Runnable {
                     synchronized (nodes[job_taken.getAssignedNodeId()]) {
                         if (nodes[job_taken.getAssignedNodeId()].getStatus().equals("Busy")) {
                             nodes[job_taken.getAssignedNodeId()].setStatus("Free"); // El nodo vuelve a estado libre
-                            nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
+                            //nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
                             job_taken.stage = 2;
-                            // continue normally to move job to execution
                         }
                     }
                 //}
@@ -64,8 +63,8 @@ public class PreExecutionCheck implements Runnable {
                     synchronized (nodes[job_taken.getAssignedNodeId()]) {
                         if (nodes[job_taken.getAssignedNodeId()].getStatus().equals("Busy")) {
                             nodes[job_taken.getAssignedNodeId()].setStatus("Out of Service"); // El nodo pasa a fuera de servicio
-                            nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
-                            // continue normally to mark job as failed
+                            //nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
+                            job_taken.stage = 2;
                         }
                     }
                 //}
