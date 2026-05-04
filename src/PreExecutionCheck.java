@@ -1,81 +1,83 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class PreExecutionCheck implements Runnable {
 
-    private final ArrayList<Job> jobsQueue;
-    private final ArrayList<Job> jobsExecution;
-    private final ArrayList<Job> jobsFailed;
-    private final Node[] nodes;
+    ArrayList<Job> jobsQueue;
+    ArrayList<Job> jobsExecution;
+    ArrayList<Job> jobsFailed;
+    Node[] nodes;
+    Random random;
 
     public PreExecutionCheck(ArrayList<Job> jobsQueue, ArrayList<Job> jobsExecution,
                              ArrayList<Job> jobsFailed, Node[] nodes) {
-        this.jobsQueue     = jobsQueue;
+        this.jobsQueue = jobsQueue;
         this.jobsExecution = jobsExecution;
-        this.jobsFailed    = jobsFailed;
-        this.nodes         = nodes;
+        this.jobsFailed = jobsFailed;
+        this.nodes = nodes;
+        random = new Random();
     }
 
     @Override
     public void run() {
-
         while (true) {
-
-            Job job = null;
+            Job job_taken = null;
             synchronized (jobsQueue) {
                 if (!jobsQueue.isEmpty()) {
-                    int idx = Politic.randomIndex(jobsQueue.size());
-                    job = jobsQueue.remove(idx);
+                    int i_random_job = Politic.randomIndex(jobsQueue.size()); // Toma un job aleatorio de la cola
+                    job_taken = jobsQueue.remove(i_random_job);
                 }
             }
 
-            if (job == null) {
-                // FIX: Condición de parada: si los Schedulers terminaron y la
-                // cola está vacía, este hilo ya no tiene trabajo.
+            if (job_taken == null) {
                 if (!Main.getAreStagesRunning()) {
-                    break;
+                    break; // Si las etapas anteriores terminaron y la cola está vacía, el hilo sale
                 }
-                try { Thread.sleep(5); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+                try {
+                    Thread.sleep(20); // Delay corto para no consumir CPU innecesariamente
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 continue;
             }
 
-            // Demora fija de la Etapa 2
-            try { Thread.sleep(Politic.PRE_CHECK_DELAY_MS); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
-
-            if (Politic.isValidJob()) {
-                // Válido: liberar UN nodo ocupado y pasar el job a ejecución.
-                // FIX: El original no sincronizaba el acceso al nodo → race condition.
-                // Ahora se sincroniza sobre el objeto nodo antes de modificarlo.
-                boolean nodeFreed = false;
-                for (int i = 0; i < nodes.length && !nodeFreed; i++) {
+            if (Politic.isValidJob()) { // Valida el porcentaje de válidos/inválidos (85%/15%)
+                for (int i = 0; i < nodes.length; i++) {
                     synchronized (nodes[i]) {
                         if (nodes[i].getStatus().equals("Busy")) {
-                            nodes[i].setStatus("Free");
+                            nodes[i].setStatus("Free"); // El nodo vuelve a estado libre
                             nodes[i].incrementJobsCounter();
-                            nodeFreed = true;
+                            job_taken.stage = 2;
+                            break;
                         }
                     }
                 }
-                job.stage = 2;
+                // El job siempre pasa a ejecución
                 synchronized (jobsExecution) {
-                    jobsExecution.add(job);
+                    jobsExecution.add(job_taken);
                 }
             } else {
-                // Inválido: poner nodo fuera de servicio y marcar job como fallido.
-                boolean nodeMarked = false;
-                for (int i = 0; i < nodes.length && !nodeMarked; i++) {
+                for (int i = 0; i < nodes.length; i++) {
                     synchronized (nodes[i]) {
                         if (nodes[i].getStatus().equals("Busy")) {
-                            nodes[i].setStatus("Out of Service");
+                            nodes[i].setStatus("Out of Service"); // El nodo pasa a fuera de servicio
                             nodes[i].incrementJobsCounter();
-                            nodeMarked = true;
+                            break;
                         }
                     }
                 }
+                // El job siempre va a fallidos
                 synchronized (jobsFailed) {
-                    jobsFailed.add(job);
+                    jobsFailed.add(job_taken);
                 }
+            }
+
+            try {
+                Thread.sleep(70); // Tiempo simulado que tarda en la etapa 2
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }

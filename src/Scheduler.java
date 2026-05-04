@@ -1,63 +1,61 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Scheduler implements Runnable {
 
-    private final ArrayList<Job> jobContainer;
-    private final ArrayList<Job> jobQueue;
-    private final Node[] nodes;
+    private ArrayList<Job> jobContainer;
+    private ArrayList<Job> jobQueue;
+    private Node[] nodes;
 
     public Scheduler(ArrayList<Job> jobContainer, ArrayList<Job> jobQueue, Node[] nodes) {
         this.jobContainer = jobContainer;
-        this.jobQueue     = jobQueue;
-        this.nodes        = nodes;
+        this.jobQueue = jobQueue;
+        this.nodes = nodes;
     }
 
     @Override
     public void run() {
-
+        Random random = new Random();
         while (true) {
-
             Job job = null;
             synchronized (jobContainer) {
                 if (!jobContainer.isEmpty()) {
-                    job = jobContainer.remove(0);
+                    job = jobContainer.remove(0); // Lo toma y lo saca del container
                 }
             }
 
-            // FIX: El original tenía jobQueue.add(job) FUERA del if,
-            // por lo que se añadía null cuando no había jobs.
-            // Ahora el break y el add están correctamente dentro de cada rama.
-            if (job == null) {
-                break; // No hay más jobs que schedulear → este hilo termina
-            }
+            if (job != null) {
+                // Busca un nodo libre, setea como busy y pasa a la siguiente etapa.
+                boolean assigned = false;
+                while (!assigned) {
+                    int randomIndex = Politic.randomIndex(nodes.length);
+                    Node node = nodes[randomIndex];
 
-            // Buscar un nodo libre de forma aleatoria
-            boolean assigned = false;
-            while (!assigned) {
-                int idx  = Politic.randomIndex(nodes.length);
-                Node node = nodes[idx];
-
-                // FIX: Cada nodo se bloquea individualmente para evitar que
-                // dos hilos Scheduler asignen el mismo nodo simultáneamente.
-                synchronized (node) {
-                    if (node.getStatus().equals("Free")) {
-                        node.setStatus("Busy");
-                        node.incrementJobsCounter();
-                        job.stage = 1;
-                        assigned  = true;
+                    synchronized (node) {
+                        if (node.getStatus().equals("Free")) {
+                            node.setStatus("Busy");
+                            node.incrementJobsCounter();
+                            job.stage = 1;
+                            assigned = true;
+                        }
                     }
                 }
             }
-
-            // Agregar a la cola solo después de una asignación exitosa
+            // Si no hay nodos libres, sale del while
+            else {
+                break;
+            }
+            // Agrega el job a la cola, sincronizado para evitar que se sobrescriban datos
             synchronized (jobQueue) {
                 jobQueue.add(job);
             }
-
-            // Demora fija de la Etapa 1
-            try { Thread.sleep(Politic.SCHEDULER_DELAY_MS); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+            try {
+                Thread.sleep(100); // Tiempo simulado para la etapa 1
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
