@@ -41,7 +41,7 @@ public class WorkerExecution implements Runnable {
                     jobsFinalized.add(job_taken);
                 }
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
@@ -53,7 +53,7 @@ public class WorkerExecution implements Runnable {
                     jobsFailed.add(job_taken);
                 }
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;

@@ -47,7 +47,7 @@ public class Scheduler implements Runnable {
                 jobQueue.add(job);
             }
             try {
-                Thread.sleep(1); // Aca depsues ponemos el tiempo que tarda
+                Thread.sleep(100); // Aca depsues ponemos el tiempo que tarda
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

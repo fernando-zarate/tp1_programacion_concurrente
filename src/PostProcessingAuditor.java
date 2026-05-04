@@ -26,7 +26,7 @@ public class PostProcessingAuditor implements Runnable {
             if (job != null) {
                 // Acá tenemos que simular un tiempo pero habria que ver cuanto por etapa
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
