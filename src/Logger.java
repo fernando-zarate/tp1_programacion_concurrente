@@ -42,7 +42,7 @@ public class Logger implements Runnable {
                 }
                 long time = System.currentTimeMillis() - initialTime;
 
-                String line = "Time: " + time + " | Failed Jobs: " + failed + " | Verified Jobs: " + verified;
+                String line = "Time: " + time + " ms | Failed Jobs: " + failed + " | Verified Jobs: " + verified;
                 System.out.println(line);
                 writer.write(line);
                 writer.newLine();
@@ -51,7 +51,7 @@ public class Logger implements Runnable {
             }
             this.finalTime = System.currentTimeMillis() - initialTime;
 
-            writer.write("Total Time: " + finalTime + " | Total Failed Jobs: " + failedJobs.size() + " | Total Verified Jobs: " + verifiedJobs.size());
+            writer.write("Total Time: " + finalTime + " ms | Total Failed Jobs: " + failedJobs.size() + " | Total Verified Jobs: " + verifiedJobs.size());
             writer.newLine();
             writer.close();
 
