@@ -8,16 +8,13 @@ public class PreExecutionCheck implements Runnable {
     ArrayList<Job> jobsExecution;
     ArrayList<Job> jobsFailed;
     Node[] nodes;
-
     Random random;
     
     public PreExecutionCheck(ArrayList<Job> JobsQueue, ArrayList<Job> JobsExcecution, ArrayList<Job> JobsFailed, Node[] nodes) {
-        
         this.JobsQueue = new ArrayList<>();
         this.jobsExecution = new ArrayList<>();
         this.jobsFailed = new ArrayList<>();
         this.nodes = new Node[200];
-
         this.JobsQueue = JobsQueue;
         this.jobsExecution = JobsExcecution;
         this.jobsFailed = JobsFailed;
@@ -26,62 +23,55 @@ public class PreExecutionCheck implements Runnable {
     }
 
     @Override
-    public void run() 
-    {
-
-        while(true)
-        {
-
+    public void run() {
+        while (Main.getAreStagesRunning() || !JobsQueue.isEmpty()) {
             Job job_taken = null;
-            synchronized (JobsQueue)
-            {
-                if (!JobsQueue.isEmpty())
-                {
+            synchronized (JobsQueue) {
+                if (!JobsQueue.isEmpty()) {
                     // tomamos un job aleatorio de los Jobs en cola
                     int i_random_job = Politic.randomIndex(JobsQueue.size());
                     job_taken = JobsQueue.remove(i_random_job);
                 }
             }
-
-            if (job_taken == null)
-            {
+            if (job_taken == null) {
                 try {
-                    Thread.sleep(1);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                    break;
                 }
                 continue;
             }
-
-            if(Politic.executionSuccess())
-            {
-
+            if (Politic.executionSuccess()) {
                 // vamos a recorrer el arreglo buscando un nodo ocupado
-                for(int i=0; i<nodes.length; i++)
-                {
-                    if( nodes[i].getStatus().equals("Busy"))
-                    {
-                        nodes[i].setStatus("Free");
-                        nodes[i].incrementJobsCounter();
-                        jobsExecution.add(job_taken);
-                        break;
+                for (int i = 0; i < nodes.length; i++) {
+                    Node node = nodes[i];
+                    synchronized (node) {
+                        if (node.getStatus().equals("Busy")) {
+                            node.setStatus("Free");
+                            node.incrementJobsCounter();
+                            synchronized (jobsExecution) {
+                                jobsExecution.add(job_taken);
+                            }
+                            break;
+                        }
                     }
                 }
-
-            }
-            else
-            {
-                for(int i=0; i<nodes.length; i++)
-                {
-                    if( nodes[i].getStatus().equals("Busy"))
-                    {
-                        nodes[i].setStatus("Out of Service");
-                        nodes[i].incrementJobsCounter();
-                        jobsFailed.add(job_taken);
-                        break;
+            } else {
+                for (int i = 0; i < nodes.length; i++) {
+                    Node node = nodes[i];
+                    synchronized (node) {
+                        if (node.getStatus().equals("Busy")) {
+                            node.setStatus("Out of Service");
+                            node.incrementJobsCounter();
+                            synchronized (jobsFailed) {
+                                jobsFailed.add(job_taken);
+                            }
+                            break;
+                        }
                     }
                 }
             }
-        }    
+        }
     }
 }

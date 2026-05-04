@@ -5,16 +5,17 @@ import java.util.ArrayList;
 public class Main {
 
     // GLOBAL CONSTANTS:
-    private static final Integer NODE_QUANTITY = 200;
-    private static final Integer JOB_QUANTITY = 500;
-    private static final Integer SCHEDULER_QUANTITY = 3;
-    private static final Integer PRE_EXECUTION_CHECK_QUANTITY = 2;
-    private static final Integer WORKER_EXECUTION_QUANTITY = 3;
-    private static final Integer POST_PROCESSING_AUDITOR_QUANTITY = 2;
-
-    // GLOBAL VARIABLES:
+    private static final int NODE_QUANTITY = 200;
+    private static final int JOB_QUANTITY = 500;
+    private static final int SCHEDULER_QUANTITY = 3;
+    private static final int PRE_EXECUTION_CHECK_QUANTITY = 2;
+    private static final int WORKER_EXECUTION_QUANTITY = 3;
+    private static final int POST_PROCESSING_AUDITOR_QUANTITY = 2;
+    
     // Simulation state.
-    static Boolean areStagesRunning = true;
+    private static volatile boolean areStagesRunning = true;
+
+    public static boolean getAreStagesRunning() { return areStagesRunning; }
 
     public static void main(String[] args) {
 
@@ -28,8 +29,9 @@ public class Main {
         ArrayList<Job> jobsFinished = new ArrayList<>();
         ArrayList<Job> jobsValidated = new ArrayList<>();
         ArrayList<Job> jobsFailed = new ArrayList<>();
-        // Logger thread.
-        Thread logger = new Thread(new Logger(jobsFailed, jobsValidated));
+        // Logger instance and thread.
+        Logger logger = new Logger(jobsFailed, jobsValidated);
+        Thread loggerThread = new Thread(logger);
         // Stage threads arrays.
         Thread[] schedulers = new Thread[SCHEDULER_QUANTITY]; // Stage 1: Scheduler.
         Thread[] preExecutionChecks = new Thread[PRE_EXECUTION_CHECK_QUANTITY]; // Stage 2: PreExecutionCheck.
@@ -56,7 +58,7 @@ public class Main {
         }
         // Initialize WorkerExecution threads array.
         for (int i = 0; i < WORKER_EXECUTION_QUANTITY; i++) {
-            workerExecutions[i] = new Thread(new WorkerExecution(jobsInExecution, jobsFinished, jobsFailed));
+            workerExecutions[i] = new Thread(new WorkerExecution(jobsFinished, jobsInExecution, jobsFailed));
         }
         // Initialize PostProcessingAuditor threads array.
         for (int i = 0; i < POST_PROCESSING_AUDITOR_QUANTITY; i++) {
@@ -65,7 +67,7 @@ public class Main {
 
         // START OF ALL STAGES AND LOGGER:
         // Start Logger thread.
-        logger.start();
+        loggerThread.start();
         // Start Scheduler threads.
         for (int i = 0; i < SCHEDULER_QUANTITY; i++) {
             schedulers[i].start();
@@ -84,7 +86,7 @@ public class Main {
         }
 
         // SINCHRONIZATION OF STAGES:
-        // Set Join for Scheduler threads.
+        // Join Scheduler threads first (they finish when job container is empty).
         for (int i = 0; i < SCHEDULER_QUANTITY; i++) {
             try {
                 schedulers[i].join();
@@ -92,7 +94,34 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        // Set Join for PreExecutionCheck threads.
+
+        // Wait until all jobs reach final stage (validated or failed)
+        while (true) {
+            int failedCount;
+            int validatedCount;
+            synchronized (jobsFailed) {
+                failedCount = jobsFailed.size();
+            }
+            synchronized (jobsValidated) {
+                validatedCount = jobsValidated.size();
+            }
+            if (failedCount + validatedCount >= JOB_QUANTITY) {
+                break;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        // Signal stages to stop and stop logger
+        areStagesRunning = false;
+        // Interrupt logger thread to stop its loop
+        loggerThread.interrupt();
+
+        // Join remaining stage threads
         for (int i = 0; i < PRE_EXECUTION_CHECK_QUANTITY; i++) {
             try {
                 preExecutionChecks[i].join();
@@ -100,7 +129,6 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        // Set Join for WorkerExecution threads.
         for (int i = 0; i < WORKER_EXECUTION_QUANTITY; i++) {
             try {
                 workerExecutions[i].join();
@@ -108,7 +136,6 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        // Set Join for PostProcessingAuditor threads.
         for (int i = 0; i < POST_PROCESSING_AUDITOR_QUANTITY; i++) {
             try {
                 postProcessingAuditors[i].join();
@@ -117,12 +144,9 @@ public class Main {
             }
         }
 
-        // PRE FINALIZATION:
-        // Set areStagesRunning to false to stop Logger thread.
-        areStagesRunning = false;
-        // Set Join for Logger thread to wait for completion.
+        // Wait for logger to finish writing
         try {
-            logger.join();
+            loggerThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -130,9 +154,5 @@ public class Main {
         // FINALIZATION:
         System.out.println("All stages finished. Program ended.");
         return;
-    }
-
-    public static Boolean getAreStagesRunning() {
-        return areStagesRunning;
     }
 }

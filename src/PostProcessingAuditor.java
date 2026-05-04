@@ -17,7 +17,7 @@ public class PostProcessingAuditor implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (Main.getAreStagesRunning() || !jobsFinished.isEmpty()) {
             Job job = null;
             synchronized (jobsFinished) {
                 if (!jobsFinished.isEmpty()) {
@@ -27,10 +27,9 @@ public class PostProcessingAuditor implements Runnable {
             if (job != null) {
                 // Acá tenemos que simular un tiempo pero habria que ver cuanto por etapa
                 try {
-                    Thread.sleep(1);
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
+                    e.printStackTrace();
                 }
                 // Aplica política
                 if (Politic.finalCheckCorrect()) {
@@ -42,13 +41,6 @@ public class PostProcessingAuditor implements Runnable {
                     synchronized (jobsFailed) {
                         jobsFailed.add(job);
                     }
-                }
-            }
-            else {
-                try  {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
         }
