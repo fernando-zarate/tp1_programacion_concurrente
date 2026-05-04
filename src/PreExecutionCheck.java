@@ -44,36 +44,29 @@ public class PreExecutionCheck implements Runnable {
             }
 
             if (Politic.isValidJob()) { // Valida el porcentaje de válidos/inválidos (85%/15%)
-                //for (int i = 0; i < nodes.length; i++) {
-
-                    synchronized (nodes[job_taken.getAssignedNodeId()]) {
-                        if (nodes[job_taken.getAssignedNodeId()].getStatus().equals("Busy")) {
-                            nodes[job_taken.getAssignedNodeId()].setStatus("Free"); // El nodo vuelve a estado libre
-                            //nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
-                            job_taken.stage = 2;
-                        }
+                synchronized (nodes[job_taken.getAssignedNodeId()]) {
+                    if (nodes[job_taken.getAssignedNodeId()].getStatus().equals("Busy")) {
+                        nodes[job_taken.getAssignedNodeId()].setStatus("Free"); // El nodo vuelve a estado libre
+                        //nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
+                        job_taken.stage = 2;
                     }
-                //}
+                }
                 // El job siempre pasa a ejecución
                 synchronized (jobsExecution) {
                     jobsExecution.add(job_taken);
                 }
             } else {
-                //for (int i = 0; i < nodes.length; i++) {
-                    synchronized (nodes[job_taken.getAssignedNodeId()]) {
-                        if (nodes[job_taken.getAssignedNodeId()].getStatus().equals("Busy")) {
-                            nodes[job_taken.getAssignedNodeId()].setStatus("Out of Service"); // El nodo pasa a fuera de servicio
-                            //nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
-                            job_taken.stage = 2;
-                        }
+                synchronized (nodes[job_taken.getAssignedNodeId()]) {
+                    if (nodes[job_taken.getAssignedNodeId()].getStatus().equals("Busy")) {
+                        nodes[job_taken.getAssignedNodeId()].setStatus("Out of Service"); // El nodo pasa a fuera de servicio
+                        job_taken.stage = 2;
                     }
-                //}
+                }
                 // El job siempre va a fallidos
                 synchronized (jobsFailed) {
                     jobsFailed.add(job_taken);
                 }
             }
-
             try {
                 Thread.sleep(70); // Tiempo simulado que tarda en la etapa 2
             } catch (InterruptedException e) {

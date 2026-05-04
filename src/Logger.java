@@ -22,7 +22,7 @@ public class Logger implements Runnable {
         this.initialTime = System.currentTimeMillis();
         BufferedWriter writer = null;
         try {
-            writer = new BufferedWriter(new FileWriter("log.txt", true)); // cambiar a true si queremos sobrescribir el archivo en cada ejecución
+            writer = new BufferedWriter(new FileWriter("log.txt", true)); // cambiar a false si no queremos sobrescribir el archivo en cada ejecución
             long time;
             int failed;
             int verified;
@@ -43,7 +43,7 @@ public class Logger implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restaura el flag de interrupción para salida limpia
+            Thread.currentThread().interrupt(); // Restablece el estado de interrupción
         } finally {
             // Al finalizar, escribe el resumen total
             this.finalTime = System.currentTimeMillis() - initialTime;
