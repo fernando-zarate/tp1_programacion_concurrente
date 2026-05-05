@@ -22,7 +22,7 @@ public class Logger implements Runnable {
         this.initialTime = System.currentTimeMillis();
         BufferedWriter writer = null;
         try {
-            writer = new BufferedWriter(new FileWriter("log.txt", true)); // cambiar a false si no queremos sobrescribir el archivo en cada ejecución
+            writer = new BufferedWriter(new FileWriter("log.txt", true)); // cambiar a false si no queremos acumular el registro en el archivo en cada ejecución
             long time;
             int failed;
             int verified;
@@ -34,7 +34,7 @@ public class Logger implements Runnable {
                     verified = verifiedJobs.size();
                 }
                 time = System.currentTimeMillis() - initialTime;
-                String line = "Time: " + time + " | Failed Jobs: " + failed + " | Verified Jobs: " + verified;
+                String line = "Time: " + time + " ms | Failed Jobs: " + failed + " | Verified Jobs: " + verified;
                 System.out.println(line);
                 writer.write(line);
                 writer.newLine();
@@ -43,17 +43,17 @@ public class Logger implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Restablece el estado de interrupción
+            Thread.currentThread().interrupt();
         } finally {
-            // Al finalizar, escribe el resumen total
+            // Al finalizar, escribe el resumen total:
             this.finalTime = System.currentTimeMillis() - initialTime;
             try {
-                String summary = "Total Time: " + finalTime + " | Total Failed Jobs: " + failedJobs.size() + " | Total Verified Jobs: " + verifiedJobs.size();
+                String total = "Total Time: " + finalTime + " ms | Total Failed Jobs: " + failedJobs.size() + " | Total Verified Jobs: " + verifiedJobs.size();
                 if (writer == null) {
                     writer = new BufferedWriter(new FileWriter("log.txt", false));
                 }
-                System.out.println(summary);
-                writer.write(summary);
+                System.out.println(total);
+                writer.write(total);
                 writer.newLine();
                 writer.close();
             } catch (IOException e) {
