@@ -11,7 +11,8 @@ public class PreExecutionCheck implements Runnable {
     Node[] nodes;
     Random random;
 
-    public PreExecutionCheck(ArrayList<Job> jobsQueue, ArrayList<Job> jobsExecution,
+    public PreExecutionCheck(ArrayList<Job> jobsQueue,
+                             ArrayList<Job> jobsExecution,
                              ArrayList<Job> jobsFailed, Node[] nodes) {
         this.jobsQueue = jobsQueue;
         this.jobsExecution = jobsExecution;
@@ -26,11 +27,10 @@ public class PreExecutionCheck implements Runnable {
             Job job_taken = null;
             synchronized (jobsQueue) {
                 if (!jobsQueue.isEmpty()) {
-                    int i_random_job = Politic.randomIndex(jobsQueue.size()); // Toma un job aleatorio de la cola
-                    job_taken = jobsQueue.remove(i_random_job);
+                    int i_random_job = Politic.randomIndex(jobsQueue.size());
+                    job_taken = jobsQueue.remove(i_random_job); // Toma un job aleatorio de la cola y lo elimina de la cola
                 }
             }
-
             if (job_taken == null) {
                 if (!Main.getAreStagesRunning()) {
                     break; // Si las etapas anteriores terminaron y la cola está vacía, el hilo sale
@@ -47,7 +47,6 @@ public class PreExecutionCheck implements Runnable {
                 synchronized (nodes[job_taken.getAssignedNodeId()]) {
                     if (nodes[job_taken.getAssignedNodeId()].getStatus().equals("Busy")) {
                         nodes[job_taken.getAssignedNodeId()].setStatus("Free"); // El nodo vuelve a estado libre
-                        //nodes[job_taken.getAssignedNodeId()].incrementJobsCounter();
                         job_taken.stage = 2;
                     }
                 }

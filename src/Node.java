@@ -12,9 +12,19 @@ public class Node {
         this.jobsCounter = 0;
     }
 
-    public Integer getId()          { return id; }
-    public String  getStatus()      { return status; }
-    public void    setStatus(String status) { this.status = status; }
-    public Integer getJobsCounter() { return jobsCounter; }
-    public void    incrementJobsCounter() { this.jobsCounter++; }
+    public Integer getId() {
+        return id;
+    }
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    public Integer getJobsCounter() {
+        return jobsCounter;
+    }
+    public void incrementJobsCounter() {
+        this.jobsCounter++;
+    }
 }

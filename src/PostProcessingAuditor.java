@@ -8,7 +8,8 @@ public class PostProcessingAuditor implements Runnable {
     private ArrayList<Job> jobsValidated;
     private ArrayList<Job> jobsFailed;
 
-    public PostProcessingAuditor(ArrayList<Job> jobsFinished, ArrayList<Job> jobsValidated,
+    public PostProcessingAuditor(ArrayList<Job> jobsFinished,
+                                 ArrayList<Job> jobsValidated,
                                  ArrayList<Job> jobsFailed) {
         this.jobsFinished = jobsFinished;
         this.jobsValidated = jobsValidated;

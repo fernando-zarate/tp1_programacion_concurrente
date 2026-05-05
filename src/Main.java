@@ -112,11 +112,9 @@ public class Main {
                 break;
             }
         }
-
         // Señalamos a las etapas que terminen y detenemos el logger
         areStagesRunning = false;
-        loggerThread.interrupt(); // Interrumpimos el logger para detener su loop
-
+        loggerThread.interrupt();
         // Esperamos a que terminen los hilos restantes
         for (int i = 0; i < PRE_EXECUTION_CHECK_QUANTITY; i++) {
             try {
